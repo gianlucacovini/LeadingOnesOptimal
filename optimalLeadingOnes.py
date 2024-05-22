@@ -1,30 +1,32 @@
 import numpy as np
-import math
 import itertools
 import time
-
-start_time = time.time() 
-
-# Dimension of the problem
-n = 10
-    
-K = {} # Creating an empty dict
-T = {}
-
-# Compose the list of nodes: idea is that we generate them all and then order them
+from scipy.special import comb
+import math
 
 def generate_bit_strings(n):
+    """ Generate all bit strings of length n. """
     return [tuple(map(int, bits)) for bits in itertools.product('01', repeat=n)]
 
 def LeadingOnes(x):
+    """ Return the count of leading ones in a bit string. """
     return max(np.arange(1, len(x) + 1) * (np.cumprod(x) == 1))
 
 def OneMax(x):
+    """ Return the sum of the bit string. """
     return sum(x)
 
 def sort_bit_strings(bit_strings):
-    # Sort the bit strings based on the lexicographic order
+    """ Sort bit strings by leading ones and one max lexicographic criteria. """
     return sorted(bit_strings, key=lambda x: (LeadingOnes(x), OneMax(x)), reverse=False)
+
+start_time = time.time()
+
+# Dimension of the problem
+n = 4
+    
+K = {} # Creating an empty dict
+T = {}
 
 nodes = sort_bit_strings(generate_bit_strings(n)) # Write just one function
     
@@ -43,20 +45,26 @@ while c != 0: # Verifies that the current node is not the all 0 string
     # update node
     c -= 1
     current_node = nodes[c]
+
     m = OneMax(current_node)
+    l = LeadingOnes(current_node)
 
     if not np.any(current_node):
         break
 
     E_opt = np.Inf
-    P = {}
-    for k in range(1, n-m+1):
+
+    for k in range(1, n-l+1): # Is it right n-l+1?
+        P = {}
         for node in K.keys(): # We look only between the keys we have already looked, since the lexicographic improvement is possible only towards them
             if sum(list(abs(a - b) for a, b in zip(node, current_node))) == k: # We consider only the strings where we changed exactly k elements 
-                if sum(node) > sum(current_node): 
+                if LeadingOnes(node) > l:
                     P[node] = 1/math.comb(n, k)
+                elif LeadingOnes(node) == l:
+                    if sum(node) > sum(current_node): 
+                        P[node] = 1/math.comb(n, k)
             
-        P_current_node = 1 - sum(P.values()) # Is it equal to 1 - all the other probabilities??
+        P_current_node = 1 - sum(P.values())
         
         # Calculated expected time with given k
         E_current = round((1 + sum([P[node]*T[node] for node in P.keys()]))/(1-P_current_node), 3)
@@ -74,7 +82,33 @@ T[tuple(map(int, np.zeros(n)))] = 1
 # Calculate the total expected time for the algorithm
 Expected_time = 1 + sum([T[node]/(2**n) for node in T.keys()])
 
+end_time = time.time()  # Capture end time
+
 print(f"Expected time for n = {n}: ", round(Expected_time, 3))
 
-end_time = time.time()  # Capture end time
 print(f"Execution Time for n = {n}: {round(end_time - start_time, 3)} seconds") # It is about 5 times higher for each n added
+
+with open('results.txt', 'w') as file:
+    file.write("Policy x\n")
+    file.write(f"n: {n}\n")
+    file.write(f"Expected time: {Expected_time}\n")
+    file.write(f"K: {K}\n")
+    file.write(f"T: {T}\n")
+
+
+def check_keys(K):
+    # Create a dictionary to store (LO, OM) tuples and their corresponding dictionary values
+    fitness_dict = {}
+    for bits, value in K.items():
+        # Calculate the fitnesses
+        lo_val = LeadingOnes(bits)
+        om_val = OneMax(bits)
+        # Check if this (LO, OM) pair already exists with a different value
+        if (lo_val, om_val) in fitness_dict:
+            if fitness_dict[(lo_val, om_val)] != value:
+                print(bits, value)
+        else:
+            fitness_dict[(lo_val, om_val)] = value
+            
+    print("done")
+    return fitness_dict
