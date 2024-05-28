@@ -194,7 +194,7 @@ if __name__ == "__main__":
     # Dimension of the problem
     # n = 1
     
-    for n in range(1, 11):
+    for n in range(4, 5):
     # TBP
         start_time = time.time()
     
