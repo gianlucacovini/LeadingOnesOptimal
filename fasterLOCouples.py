@@ -7,7 +7,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import os
 import multiprocessing
 
-# MAKE IT FASTER USING NUMPY
+# MAKE IT FASTER USING NUMPY.
 
 core_num = 1
 
