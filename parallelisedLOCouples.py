@@ -40,6 +40,8 @@ def sort_bit_strings(bit_strings):
     # Sort the bit strings based on the lexicographic order
     return sorted(bit_strings, key=lambda x: (LeadingOnes(x), OneMax(x)), reverse=False)
 
+
+
 def k_loop(args):
     k, l, m, n, couples, num_couples, in_prob, T = args
     
