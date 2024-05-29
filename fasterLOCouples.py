@@ -7,59 +7,59 @@ from mpl_toolkits.mplot3d import Axes3D
 import os
 import multiprocessing
 
-# MAKE IT FASTER USING NUMPY.
-
 core_num = 1
 
 curr_dir = os.getcwd()
 
 def generate_bit_strings(n):
-    return [tuple(map(int, bits)) for bits in itertools.product('01', repeat=n)]
+    return np.array(list(itertools.product([0, 1], repeat=n)))
 
 def LeadingOnes(x):
-    return max(np.arange(1, len(x) + 1) * (np.cumprod(x) == 1), default=0)
+    return np.argmax(np.cumprod(x) == 0) if np.any(np.cumprod(x) == 0) else len(x)
 
 def OneMax(x):
-    return sum(x)
+    return np.sum(x)
 
 def categorize_bit_strings(n):
     bit_strings = generate_bit_strings(n)
-    results_dict = {}
-
-    for bits in bit_strings:
-        lo = LeadingOnes(bits)
-        om = OneMax(bits)
-        key = (lo, om)
-
-        if key not in results_dict:
-            results_dict[key] = []
+    lo_om = np.array([(LeadingOnes(bits), OneMax(bits)) for bits in bit_strings])
+    unique_keys = np.unique(lo_om, axis=0)
+    
+    results_dict = {tuple(key): [] for key in unique_keys}
+    for i, bits in enumerate(bit_strings):
+        key = tuple(lo_om[i])
         results_dict[key].append(bits)
-
+    
     return results_dict
 
 def k_loop(args):
     k, l, m, n, couples, num_couples, in_prob, T = args
 
-    P = {key: 0 for key in couples}
-    for current_node in couples[(l, m)]:
-        for lambda_ in range(0, n-l+1):
-            for mu in range(-k+1, n-l+1):
-                if (l+lambda_, m+mu) in couples:
-                    for node in couples[(l+lambda_, m+mu)]:
-                        if sum(list(abs(a - b) for a, b in zip(node, current_node))) == k:
-                            if LeadingOnes(node) > l:
-                                P[(l+lambda_, m+mu)] += 1/(math.comb(n, k)*num_couples)
-                            elif LeadingOnes(node) == l:
-                                if sum(node) > sum(current_node):
-                                    P[(l+lambda_, m+mu)] += 1/(math.comb(n, k)*num_couples)
-
-    P[(l, m)] = 1 - sum(P.values())
-
-    if P[(l, m)] != 1:
-        E_current = round((1 + sum([P[couple]*T[(couple[0], couple[1])] for couple in P.keys()]))/(1-P[(l, m)]), 3)
+    P = np.zeros((n+1, n+1))
+    current_nodes = np.array(couples[(l, m)])
+    
+    for lambda_ in range(0, n-l+1):
+        for mu in range(-k+1, n-l+1):
+            if (l+lambda_, m+mu) in couples:
+                nodes = np.array(couples[(l+lambda_, m+mu)])
+                distances = np.sum(np.abs(nodes[:, None, :] - current_nodes[None, :, :]), axis=2)
+                valid_indices = np.where(distances == k)
+                
+                if len(valid_indices[0]) > 0:
+                    for i, j in zip(*valid_indices):
+                        node = nodes[i]
+                        if LeadingOnes(node) > l:
+                            P[l+lambda_, m+mu] += 1 / (math.comb(n, k) * num_couples)
+                        elif LeadingOnes(node) == l and OneMax(node) > OneMax(current_nodes[j]):
+                            P[l+lambda_, m+mu] += 1 / (math.comb(n, k) * num_couples)
+    
+    P[l, m] = 1 - np.sum(P)
+    
+    if P[l, m] != 1:
+        E_current = round((1 + np.sum(P * T)) / (1 - P[l, m]), 3)
     else:
         E_current = 1
-
+    
     return E_current
 
 def variables_calculator(n, pool):
@@ -174,5 +174,5 @@ def process_iteration(n, pool):
 if __name__ == "__main__":
     core_num = 4  # Adjust the number of cores based on your system
     with multiprocessing.Pool(processes=core_num) as pool:
-        for n in range(1, 11):
+        for n in range(1, 12):
             process_iteration(n, pool)

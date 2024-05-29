@@ -114,8 +114,8 @@ def plot_2d_array(array_data, sav_dir=None):
     # Tick labels for each row and column
     ax.set_xticks(np.arange(matrix_data.shape[1]))
     ax.set_yticks(np.arange(matrix_data.shape[0]))
-    ax.set_xticklabels(np.arange(1, matrix_data.shape[1]+1))
-    ax.set_yticklabels(np.arange(1, matrix_data.shape[0]+1))
+    ax.set_xticklabels(np.arange(0, matrix_data.shape[1]))
+    ax.set_yticklabels(np.arange(0, matrix_data.shape[0]))
 
     # Rotate the tick labels for better display
     plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
@@ -125,7 +125,7 @@ def plot_2d_array(array_data, sav_dir=None):
         for j in range(matrix_data.shape[1]):
             value = matrix_data[i, j]
             if not np.isnan(value):
-                ax.text(j, i, f'{value}', ha='center', va='center', color='black')
+                ax.text(j, i, f'{value:.0f}', ha='center', va='center', color='black')
     
     if sav_dir == "K":
         plt.savefig(os.path.join(curr_dir, 'K_plots', 'fitness_based', f'{n}_fitness.png'), format='png')
@@ -136,7 +136,7 @@ def plot_2d_array(array_data, sav_dir=None):
 
 if __name__ == "__main__":
     
-    for n in range(1, 20):
+    for n in range(1, 21):
     # TBP
         start_time = time.time()
 
