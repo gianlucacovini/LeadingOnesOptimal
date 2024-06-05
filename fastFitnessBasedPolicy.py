@@ -4,6 +4,7 @@ import itertools
 import time
 import matplotlib.pyplot as plt
 import os
+from functools import lru_cache
 
 curr_dir = os.getcwd()
 
