@@ -100,7 +100,7 @@ def variables_calculator(n):
 
 
 def plot_2d_array(array_data, sav_dir=None):
-    matrix_data = np.transpose(np.asmatrix(array_data))
+    matrix_data = np.transpose(np.asmatrix(array_data[:-1]))
     
     fig, ax = plt.figure(), plt.gca()
     
@@ -136,7 +136,7 @@ def plot_2d_array(array_data, sav_dir=None):
 
 if __name__ == "__main__":
     
-    for n in range(1, 21):
+    for n in range(1, 15):
     # TBP
         start_time = time.time()
 

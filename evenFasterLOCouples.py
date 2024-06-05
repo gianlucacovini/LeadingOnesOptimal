@@ -34,26 +34,34 @@ def categorize_bit_strings(n):
     
     return results_dict
 
+def mu_loop(args):
+    k, l, m, n, couples, num_couples, P, current_nodes, lambda_, mu = args
+    
+    if (l+lambda_, m+mu) in couples:
+        nodes = np.array(couples[(l+lambda_, m+mu)])
+        distances = np.sum(np.abs(nodes[:, None, :] - current_nodes[None, :, :]), axis=2)
+        valid_indices = np.where(distances == k)
+        
+        if len(valid_indices[0]) > 0:
+            for i, j in zip(*valid_indices):
+                node = nodes[i]
+                if LeadingOnes(tuple(node)) > l:
+                    P[l+lambda_, m+mu] += 1 / (math.comb(n, k) * num_couples)
+                elif LeadingOnes(tuple(node)) == l and OneMax(tuple(node)) > OneMax(tuple(current_nodes[j])):
+                    P[l+lambda_, m+mu] += 1 / (math.comb(n, k) * num_couples)
+                    
+    return P
+
 def k_loop(args):
-    k, l, m, n, couples, num_couples, in_prob, T = args
+    k, l, m, n, couples, num_couples, T, pool = args
 
     P = np.zeros((n+1, n+1))
     current_nodes = np.array(couples[(l, m)])
     
     for lambda_ in range(0, n-l+1):
-        for mu in range(-k+1, n-l+1):
-            if (l+lambda_, m+mu) in couples:
-                nodes = np.array(couples[(l+lambda_, m+mu)])
-                distances = np.sum(np.abs(nodes[:, None, :] - current_nodes[None, :, :]), axis=2)
-                valid_indices = np.where(distances == k)
-                
-                if len(valid_indices[0]) > 0:
-                    for i, j in zip(*valid_indices):
-                        node = nodes[i]
-                        if LeadingOnes(tuple(node)) > l:
-                            P[l+lambda_, m+mu] += 1 / (math.comb(n, k) * num_couples)
-                        elif LeadingOnes(tuple(node)) == l and OneMax(tuple(node)) > OneMax(tuple(current_nodes[j])):
-                            P[l+lambda_, m+mu] += 1 / (math.comb(n, k) * num_couples)
+        args_list = [(k, l, m, n, couples, num_couples, P, current_nodes, lambda_, mu) for mu in range(-k+1, n-l+1)]
+    
+        P = pool.map(mu_loop, args_list)
     
     P[l, m] = 1 - np.sum(P)
     
@@ -93,8 +101,9 @@ def variables_calculator(n, pool):
 
         num_couples = len(couples[(l, m)])
         in_prob[current_couple] = num_couples / 2**n
-
-        args_list = [(k, l, m, n, couples, num_couples, in_prob, T) for k in range(1, n - l + 1)]
+        
+        with multiprocessing.Pool(processes=core_num) as pool:
+            args_list = [(k, l, m, n, couples, num_couples, T, pool) for k in range(1, n - l + 1)]
 
         E_couple = pool.map(k_loop, args_list)
 
@@ -175,5 +184,5 @@ def process_iteration(n, pool):
 
 if __name__ == "__main__":
     with multiprocessing.Pool(processes=core_num) as pool:
-        for n in range(1, 12):
+        for n in range(4, 5):
             process_iteration(n, pool)

@@ -23,7 +23,7 @@ def sort_bit_strings(bit_strings):
 start_time = time.time()
 
 # Dimension of the problem
-n = 4
+n = 12
     
 K = {} # Creating an empty dict
 T = {}

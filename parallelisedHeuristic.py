@@ -2,7 +2,6 @@ import numpy as np
 import itertools
 import math
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import os
 import multiprocessing
 from functools import lru_cache
@@ -34,26 +33,39 @@ def categorize_bit_strings(n):
     
     return results_dict
 
+# TBD: parallelize mu and lambda_
+
+def process_mu(args):
+    k, l, m, n, lambda_, couples, current_nodes, num_couples = args
+    P_local = np.zeros((n+1, n+1))
+    
+    for mu in range(-k+1, n-l+1):
+        if (l+lambda_, m+mu) in couples:
+            nodes = np.array(couples[(l+lambda_, m+mu)])
+            distances = np.sum(np.abs(nodes[:, None, :] - current_nodes[None, :, :]), axis=2)
+            valid_indices = np.where(distances == k)
+            
+            if len(valid_indices[0]) > 0:
+                for i, j in zip(*valid_indices):
+                    node = nodes[i]
+                    if LeadingOnes(tuple(node)) > l:
+                        P_local[l+lambda_, m+mu] += 1 / (math.comb(n, k) * num_couples)
+                    elif LeadingOnes(tuple(node)) == l and OneMax(tuple(node)) > OneMax(tuple(current_nodes[j])):
+                        P_local[l+lambda_, m+mu] += 1 / (math.comb(n, k) * num_couples)
+    
+    return P_local
+
 def k_loop(args):
-    k, l, m, n, couples, num_couples, in_prob, T = args
+    k, l, m, n, couples, num_couples, T, pool = args
 
     P = np.zeros((n+1, n+1))
     current_nodes = np.array(couples[(l, m)])
     
-    for lambda_ in range(0, n-l+1):
-        for mu in range(-k+1, n-l+1):
-            if (l+lambda_, m+mu) in couples:
-                nodes = np.array(couples[(l+lambda_, m+mu)])
-                distances = np.sum(np.abs(nodes[:, None, :] - current_nodes[None, :, :]), axis=2)
-                valid_indices = np.where(distances == k)
-                
-                if len(valid_indices[0]) > 0:
-                    for i, j in zip(*valid_indices):
-                        node = nodes[i]
-                        if LeadingOnes(tuple(node)) > l:
-                            P[l+lambda_, m+mu] += 1 / (math.comb(n, k) * num_couples)
-                        elif LeadingOnes(tuple(node)) == l and OneMax(tuple(node)) > OneMax(tuple(current_nodes[j])):
-                            P[l+lambda_, m+mu] += 1 / (math.comb(n, k) * num_couples)
+    # pool = multiprocessing.Pool(processes=core_num)
+    results = pool.map(process_mu, [(k, l, m, n, lambda_, couples, current_nodes, num_couples) for lambda_ in range(0, n-l+1)])
+
+    for P_local in results:
+        P += P_local
     
     P[l, m] = 1 - np.sum(P)
     
@@ -64,8 +76,30 @@ def k_loop(args):
     
     return E_current
 
+def K_calculator(n):
+    K = np.ones((n+1, n+1)).astype(int)
+    
+    big_lim = math.floor((n-1)/2)
+    small_lim = math.floor((n+1)/3)
+        
+    K[0, :big_lim] = n
+        
+    K[0, big_lim:(n-small_lim+1)] = np.linspace(n-1, 1, num=(n-big_lim-small_lim+1)).astype(int)
+    K[1, 1] = n-1
+    K[1, 1:(n-small_lim+1)] = np.linspace(n-1, 1, num=(n-small_lim)).astype(int)
+     
+    values = np.linspace(n-2, 2, num=(n-1-small_lim))
+    
+    for row_index in range(2, n-small_lim-1):
+        K[row_index, :(n-small_lim+1)] = np.linspace(values[row_index-2], 1, num=(n-small_lim+1)).astype(int)
+        
+    return K
+
 def variables_calculator(n, pool):
-    K = np.zeros((n+1, n+1))
+    K = K_calculator(n)
+    
+    plot_2d_matrix(K, None, n)
+    
     T = np.zeros((n+1, n+1))
     in_prob = np.zeros((n+1, n+1))
 
@@ -75,7 +109,6 @@ def variables_calculator(n, pool):
 
     current_couple = list(couples.keys())[c]
 
-    K[(n-1, n-1)] = 1
     T[(n-1, n-1)] = n
 
     in_prob[(n, n)] = 1 / 2**n
@@ -93,24 +126,20 @@ def variables_calculator(n, pool):
 
         num_couples = len(couples[(l, m)])
         in_prob[current_couple] = num_couples / 2**n
+        
+        k = K[(l, m)]
+        args_list = [k, l, m, n, couples, num_couples, T, pool]
 
-        args_list = [(k, l, m, n, couples, num_couples, in_prob, T) for k in range(1, n - l + 1)]
+        E_opt = k_loop(args_list)
 
-        E_couple = pool.map(k_loop, args_list)
-
-        E_opt = np.min(E_couple)
-        k_opt = np.argmin(E_couple) + 1
-
-        K[current_couple] = k_opt
         T[current_couple] = E_opt
 
-    K[(0, 0)] = n
     T[(0, 0)] = 1
     in_prob[(0, 0)] = 1 / 2**n
 
     Expected_time = 1 + (in_prob * T).sum()
 
-    return K, T, Expected_time
+    return T, Expected_time
 
 def plot_2d_matrix(matrix_data, sav_dir, n):
     fig, ax = plt.figure(figsize=(8, 6)), plt.gca()
@@ -156,7 +185,7 @@ def plot_2d_matrix(matrix_data, sav_dir, n):
 def process_iteration(n, pool):
     start_time = time.time()
 
-    K, T, Expected_time = variables_calculator(n, pool)
+    T, Expected_time = variables_calculator(n, pool)
 
     end_time = time.time()
 
@@ -167,13 +196,11 @@ def process_iteration(n, pool):
         file.write("Policy (LO(x), OM(x))\n")
         file.write(f"n: {n}\n")
         file.write(f"Expected time: {Expected_time}\n")
-        file.write(f"K: {K}\n")
         file.write(f"T: {T}\n")
 
-    plot_2d_matrix(K, "K", n)
-    plot_2d_matrix(T, "T", n)
+    plot_2d_matrix(T, None, n)
 
 if __name__ == "__main__":
     with multiprocessing.Pool(processes=core_num) as pool:
-        for n in range(1, 15):
+        for n in range(7, 8):
             process_iteration(n, pool)
