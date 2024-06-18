@@ -16,11 +16,22 @@ def Expected_increment_calculator(n, l, m, k): # forse il max_i che ci interessa
     
     i = 1 # current value of increment considering
     
-    # QUESTI DUE VALORI SOTTO SONO SBAGLIATI PERCHé NON TENGONO CONTO DEL FATTO CHE SIA O MENO POSSIBILE AVERE 11 (in base a m) E IN BASE A k se sia possibile flipparne 2
+    if l < n-1 and k <= n-l:
+        P[(0,)] = k/(n-l-1) * (1-k/(n-l)) * (1 - (m-l)/(n-l-1)) * (math.comb(n-l, k)/math.comb(n, k))
+    else:
+        P[(0,)] = 0
+        
+    if k >= 2 and m-l >= 1 and l < n-1 and k<= n-l:
+        P[(1,)] = (k-1)/(n-l-1) * (k/(n-l)) * ((m-l)/(n-l-1)) * (math.comb(n-l, k)/math.comb(n, k))
+    else:
+        P[(1,)] = 0
+        
+    if l == n-1:
+        P[(0,)] = 1/n
+        P[(1,)] = 0
     
-    P[(0,)] = k/(n-l-1) * (1-k/(n-l)) * (1 - (m-l)/(n-l-1)) * (math.comb(n-l, k)/math.comb(n, k))
-    P[(1,)] = (k-1)/(n-l-1) * (k/(n-l)) * ((m-l)/(n-l-1)) * (math.comb(n-l, k)/math.comb(n, k)) if (m-l > 0 and k > 1) else 0
-            
+    Prob[0] = P[(0,)] + P[(1,)]
+    
     for i in range(2, max_i):
         strings[i] = generate_bit_strings(i)
         
@@ -28,13 +39,13 @@ def Expected_increment_calculator(n, l, m, k): # forse il max_i che ci interessa
             ones = np.sum(string)
             flipped = i-ones
             
-            if string[-1] == 0: # flippo
-                A = (k-flipped)/(n-l-i) if flipped < k else 0
-                B = (n-l-ones)/(n-l-i) if ones < m-l else 0
-                
-            elif string[-1] == 1: # flippo
+            if string[-1] == 0: # I don't flip if l+i+1 is 0
                 A = 1 - (k-flipped)/(n-l-i) if flipped < k else 1
-                B = 1 - (n-l-ones)/(n-l-i) if ones < m-l else 1
+                B = 1 - (m-l-ones)/(n-l-i) if ones < m-l else 1
+                
+            elif string[-1] == 1: # I flip is l+i+1 is 1
+                A = (k-flipped)/(n-l-i) if flipped < k else 0
+                B = (m-l-ones)/(n-l-i) if ones < m-l else 0
                 
             P[tuple(string)] = A*B*P[tuple(string)[:-1]]
             

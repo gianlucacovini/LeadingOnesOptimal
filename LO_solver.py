@@ -69,7 +69,7 @@ def plot_boxplot(data, labels, title, filename):
     plt.close()
 
 if __name__ == "__main__":
-    for n in range(2, 42):
+    for n in range(2, 15):
         num_runs = 1000  # Number of Monte Carlo runs
         num_cores = 24  # Number of cores for parallelization
     
@@ -82,11 +82,11 @@ if __name__ == "__main__":
         np.random.seed(42)
         evaluations_optimal_policy = run_rls_leading_ones(n, num_runs, num_cores, 'OptimalPolicyFitness')
     
-        mean_evals_k_calculator = np.mean(evaluations_k_calculator)
-        std_evals_k_calculator = np.std(evaluations_k_calculator)
+        mean_evals_k_calculator = round(np.mean(evaluations_k_calculator), 3)
+        std_evals_k_calculator = round(np.std(evaluations_k_calculator), 3)
         
-        mean_evals_optimal_policy = np.mean(evaluations_optimal_policy)
-        std_evals_optimal_policy = np.std(evaluations_optimal_policy)
+        mean_evals_optimal_policy = round(np.mean(evaluations_optimal_policy), 3)
+        std_evals_optimal_policy = round(np.std(evaluations_optimal_policy), 3)
         
         print(f"n = {n}")
         print(f"Mean evaluations (K_calculator): {mean_evals_k_calculator}")

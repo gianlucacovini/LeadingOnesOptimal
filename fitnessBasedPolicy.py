@@ -42,62 +42,62 @@ def categorize_bit_strings(n):
 
     return results_dict
 
-# def variables_calculator(n):
-#     K = np.zeros(n+1)
-#     T = {}
+def variables_calculator(n):
+    K = np.zeros(n+1)
+    T = {}
     
-#     nodes = sort_bit_strings(generate_bit_strings(n))
+    nodes = sort_bit_strings(generate_bit_strings(n))
         
-#     c = len(nodes)-2 # number of nodes
+    c = len(nodes)-2 # number of nodes
     
-#     K[n] = 0
-#     T[tuple(map(int, np.ones(n)))] = 0
+    K[n] = 0
+    T[tuple(map(int, np.ones(n)))] = 0
     
-#     current_node = nodes[c] # It starts with the node with all ones and one zero at the end
+    current_node = nodes[c] # It starts with the node with all ones and one zero at the end
                               
-#     K[n-1] = 1 # optimal k for (n-1, n-1)
-#     T[current_node] = n
+    K[n-1] = 1 # optimal k for (n-1, n-1)
+    T[current_node] = n
     
-#     while c != 0: # Verifies that the current node is not the all 0 string
+    while c != 0: # Verifies that the current node is not the all 0 string
     
-#         # update node
-#         c -= 1
-#         current_node = nodes[c]
+        # update node
+        c -= 1
+        current_node = nodes[c]
     
-#         m = OneMax(current_node)
-#         l = LeadingOnes(current_node)
+        m = OneMax(current_node)
+        l = LeadingOnes(current_node)
     
-#         if not np.any(current_node):
-#             break
+        if not np.any(current_node):
+            break
     
-#         k = OptimalPolicyFitness(l)
-#         P = {}
-#         for node in T.keys(): # We look only between the keys we have already looked, since the lexicographic improvement is possible only towards them
-#             if sum(list(abs(a - b) for a, b in zip(node, current_node))) == k: # We consider only the strings where we changed exactly k elements 
-#                 if LeadingOnes(node) > l:
-#                     P[node] = 1/math.comb(n, k)
-#                 # elif LeadingOnes(node) == l:
-#                 #     if sum(node) > sum(current_node): 
-#                 #         P[node] = 1/math.comb(n, k)
+        k = OptimalPolicyFitness(l)
+        P = {}
+        for node in T.keys(): # We look only between the keys we have already looked, since the lexicographic improvement is possible only towards them
+            if sum(list(abs(a - b) for a, b in zip(node, current_node))) == k: # We consider only the strings where we changed exactly k elements 
+                if LeadingOnes(node) > l:
+                    P[node] = 1/math.comb(n, k)
+                elif LeadingOnes(node) == l:
+                    if sum(node) > sum(current_node): 
+                        P[node] = 1/math.comb(n, k)
             
-#         P_current_node = 1 - sum(P.values())
+        P_current_node = 1 - sum(P.values())
         
-#         # Calculated expected time with given k
-#         if P_current_node != 1:
-#             E_current = round((1 + sum([P[node]*T[node] for node in P.keys()]))/(1-P_current_node), 3)
-#         else:
-#             E_current = 1
+        # Calculated expected time with given k
+        if P_current_node != 1:
+            E_current = round((1 + sum([P[node]*T[node] for node in P.keys()]))/(1-P_current_node), 3)
+        else:
+            E_current = 1
         
-#         K[l] = k
-#         T[current_node] = E_current
+        K[l] = k
+        T[current_node] = E_current
         
-#     K[0] = n
-#     T[tuple(map(int, np.zeros(n)))] = 1
+    K[0] = n
+    T[tuple(map(int, np.zeros(n)))] = 1
     
-#     # Calculate the total expected time for the algorithm
-#     Expected_time = 1 + sum([T[node]/(2**n) for node in T.keys()])
+    # Calculate the total expected time for the algorithm
+    Expected_time = sum([T[node]/(2**n) for node in T.keys()]) # We don't have the +1 because we are summing over all n, not until n-1
     
-#     return K, T, Expected_time
+    return K, T, Expected_time
 
 def E_curr_calc(args):
     k, l, n, values, num_values, in_prob, T = args
@@ -128,54 +128,54 @@ def E_curr_calc(args):
     
     return E_current
 
-def variables_calculator(n):
-    K = np.zeros(n+1)
-    T = np.zeros(n+1)
-    in_prob = np.zeros(n+1)
+# def variables_calculator(n):
+#     K = np.zeros(n+1)
+#     T = np.zeros(n+1)
+#     in_prob = np.zeros(n+1)
     
-    values = categorize_bit_strings(n)
+#     values = categorize_bit_strings(n)
         
-    c = len(values)-2 # number of nodes
+#     c = len(values)-2 # number of nodes
     
-    K[n] = 0
-    T[n] = 0
+#     K[n] = 0
+#     T[n] = 0
                                   
-    K[n-1] = 1 # optimal k for n-1
-    T[n-1] = n
+#     K[n-1] = 1 # optimal k for n-1
+#     T[n-1] = n
     
-    in_prob[n] = 1 / 2**n
-    in_prob[n-1] = 1 / 2**n
+#     in_prob[n] = 1 / 2**n
+#     in_prob[n-1] = 1 / 2**n
     
-    current_value = values[c] # It starts with the node with all ones and one zero at the end
+#     current_value = values[c] # It starts with the node with all ones and one zero at the end
     
-    while c != 0:
-        c -= 1
-        current_value = list(values.keys())[c]
+#     while c != 0:
+#         c -= 1
+#         current_value = list(values.keys())[c]
 
-        l = current_value
+#         l = current_value
 
-        if current_value == 0:
-            break
+#         if current_value == 0:
+#             break
 
-        num_values = len(values[l])
-        in_prob[current_value] = num_values / 2**n
+#         num_values = len(values[l])
+#         in_prob[current_value] = num_values / 2**n
         
-        k = OptimalPolicyFitness(l)
+#         k = OptimalPolicyFitness(l)
         
-        args = (k, l, n, values, num_values, in_prob, T)
+#         args = (k, l, n, values, num_values, in_prob, T)
 
-        E_opt = E_curr_calc(args)
+#         E_opt = E_curr_calc(args)
 
-        K[current_value] = k
-        T[current_value] = E_opt
+#         K[current_value] = k
+#         T[current_value] = E_opt
 
-    K[0] = n
-    T[0] = 1
-    in_prob[0] = 1 / 2**n
+#     K[0] = n
+#     T[0] = 1
+#     in_prob[0] = 1 / 2**n
 
-    Expected_time = 1 + (in_prob * T).sum()
+#     Expected_time = 1 + (in_prob * T).sum()
 
-    return K, T, Expected_time
+#     return K, T, Expected_time
 
 # def variables_calculator_theory(n):
 #     K = np.zeros(n)
@@ -235,7 +235,7 @@ def plot_2d_array(array_data, sav_dir=None):
 
 if __name__ == "__main__":
     
-    for n in range(2, 14):
+    for n in range(2, 15):
     # TBP
         start_time = time.time()
 
@@ -254,5 +254,5 @@ if __name__ == "__main__":
         #     file.write(f"K: {K}\n")
         #     file.write(f"T: {T}\n")
         
-        plot_2d_array(K, None)
-        plot_2d_array(T, None)
+        # plot_2d_array(K, None)
+        # plot_2d_array(T, None)
