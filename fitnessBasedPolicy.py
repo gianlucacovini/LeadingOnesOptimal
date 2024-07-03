@@ -177,25 +177,25 @@ def E_curr_calc(args):
 
 #     return K, T, Expected_time
 
-# def variables_calculator_theory(n):
-#     K = np.zeros(n)
-#     for i in range(0, n):
-#         K[i] = OptimalPolicyFitness(i)
+def variables_calculator_theory(n):
+    K = np.zeros(n)
+    for i in range(0, n):
+        K[i] = OptimalPolicyFitness(i)
         
-#     K = K.astype(int)
+    K = K.astype(int)
         
-#     P = np.zeros(n)
-#     for i in range(0, n):
-#         P[i] = math.comb(n-i-1, n-i-K[i])/math.comb(n, n-K[i])
+    P = np.zeros(n)
+    for i in range(0, n):
+        P[i] = math.comb(n-i-1, n-i-K[i])/math.comb(n, n-K[i])
     
-#     # K[n-1] = 1
-#     # P[n-1] = 1/n
+    # K[n-1] = 1
+    # P[n-1] = 1/n
     
-#     f = lambda x: 1/x
-#     inv_P = f(P)
-#     Expected_time = 1/2 * np.sum(inv_P)
+    f = lambda x: 1/x
+    inv_P = f(P)
+    Expected_time = 1/2 * np.sum(inv_P)
     
-#     return K, Expected_time
+    return K, Expected_time
 
 
 def plot_2d_array(array_data, sav_dir=None):
@@ -235,11 +235,12 @@ def plot_2d_array(array_data, sav_dir=None):
 
 if __name__ == "__main__":
     
-    for n in range(2, 15):
+    for n in range(2, 3):
     # TBP
         start_time = time.time()
 
-        K, T, Expected_time = variables_calculator(n)
+        # K, T, Expected_time = variables_calculator(n)
+        K, Expected_time = variables_calculator_theory(n)
         
         end_time = time.time()  # Capture end time
         
