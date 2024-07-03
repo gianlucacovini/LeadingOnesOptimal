@@ -132,7 +132,7 @@ def variables_calculator(n, pool):
         E_couple = pool.map(k_loop, args_list)
 
         E_opt = np.min(E_couple)
-        k_opt = np.argmin(E_couple) + 1 # DA DOVE VIENE QUESTO +1??
+        k_opt = np.argmin(E_couple) + 1 # +1 because radius start from 1 but indeces start from 0
 
         K[current_couple] = k_opt
         T[current_couple] = E_opt

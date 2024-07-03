@@ -1,8 +1,4 @@
-K_plots/*
-T_plots/*
 __pycache__/*
-results.txt
-gptOptimalLO.py
-provaParallelizedCouples.py
-Problem.py
 altro/*
+results/*
+plots/*

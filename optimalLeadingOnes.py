@@ -101,5 +101,5 @@ def main(n):
         file.write(f"T: {T}\n")
 
 if __name__ == "__main__":
-    n = 2
-    main(n)
+    for n in range(2, 21):
+        main(n)
