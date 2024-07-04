@@ -36,7 +36,7 @@ def rls_leading_ones(n, k_policy):
         om_new = OneMax(tuple(x_new))
         evaluations += 1
 
-        if lo_new > lo_best or (lo_new == lo_best and om_new > om_best):
+        if lo_new > lo_best: # or (lo_new == lo_best and om_new > om_best):
             x = x_new
             lo_best = lo_new
             om_best = om_new
@@ -63,14 +63,14 @@ def plot_boxplot(data, labels, title, filename):
     plt.xlabel('Policy')
     plt.ylabel('Evaluations')
     plt.grid(True)
-    if not os.path.exists('Box_plots'):
-        os.makedirs('Box_plots')
-    plt.savefig(os.path.join('Box_plots', filename))
+    if not os.path.exists('Box_plots_noGreedy'):
+        os.makedirs('Box_plots_noGreedy')
+    plt.savefig(os.path.join('Box_plots_noGreedy', filename))
     plt.close()
 
 if __name__ == "__main__":
-    for n in range(2, 15):
-        num_runs = 1000  # Number of Monte Carlo runs
+    for n in range(2, 31):
+        num_runs = 500  # Number of Monte Carlo runs
         num_cores = 24  # Number of cores for parallelization
     
         # Run RLS with both policies
@@ -93,7 +93,7 @@ if __name__ == "__main__":
         print(f"Standard deviation of evaluations (K_calculator): {std_evals_k_calculator}")
         print(f"Mean evaluations (OptimalPolicyFitness): {mean_evals_optimal_policy}")
         print(f"Standard deviation of evaluations (OptimalPolicyFitness): {std_evals_optimal_policy}")
-    
+            
         # Plot and save boxplot for both policies
         plot_boxplot([evaluations_k_calculator, evaluations_optimal_policy], 
                      ['K_calculator', 'OptimalPolicyFitness'], 
