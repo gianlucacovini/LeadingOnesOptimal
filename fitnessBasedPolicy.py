@@ -240,7 +240,7 @@ def plot_2d_array(array_data, sav_dir=None):
 
 if __name__ == "__main__":
     
-    for n in range(2, 102):
+    for n in range(2, 6):
     # TBP
         start_time = time.time()
 
@@ -253,12 +253,13 @@ if __name__ == "__main__":
         
         print(f"Execution Time for n = {n}: {round(end_time - start_time, 3)} seconds") # It is about 5 times higher for each n added
         
-        with open('results_LO_noGreedy.txt', 'w') as file:
-            file.write("Policy (LO(x), OM(x))\n")
-            file.write(f"n: {n}\n")
-            file.write(f"Expected time: {Expected_time}\n")
+        with open('results_LO.txt', 'a') as file:
+            file.write(f"Expected time for n = {n}: {round(Expected_time, 3)}\n")
+            # file.write("Policy (LO(x), OM(x))\n")
+            # file.write(f"n: {n}\n")
+            # file.write(f"Expected time: {Expected_time}\n")
         #     file.write(f"K: {K}\n")
         #     file.write(f"T: {T}\n")
         
-        plot_2d_array(K, "K")
+        # plot_2d_array(K, "K")
         # plot_2d_array(T, "T")

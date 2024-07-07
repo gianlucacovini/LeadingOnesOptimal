@@ -5,10 +5,15 @@ import multiprocessing
 import matplotlib.pyplot as plt
 import math
 import os
+from functools import lru_cache
+
+from optimal_oneMax import variables_calculator
 
 from heuristic_policy import K_calculator, LeadingOnes, OneMax
 
 curr_dir = os.getcwd()
+
+core_num = 24
 
 def mutate(x, k):
     """Flip k random bits in x"""
@@ -18,39 +23,39 @@ def mutate(x, k):
     x_new[indices] = 1 - x_new[indices]
     return x_new
 
-def rls_leading_ones(n, k_policy):
+@lru_cache(maxsize=None)
+def optimal_policy_oneMax(n):
+    with multiprocessing.Pool(processes=core_num) as pool:
+        K, _, __ = variables_calculator(n, pool)
+    return K
+
+def rls_leading_ones(n, K):
     """ (1+1) RLS for LeadingOnes problem using dynamic k policy """
     x = np.random.randint(2, size=n)  # Start with a random bitstring
     lo_best = LeadingOnes(tuple(x))
     om_best = OneMax(tuple(x))
     evaluations = 0
-    K = K_calculator(n)  # Precompute K values for given n
     
     while lo_best < n:
-        if k_policy == 'K_calculator':
-            k = K[lo_best, om_best]
-        elif k_policy == 'OptimalPolicyFitness':
-            k = OptimalPolicyFitness(lo_best, n)
+        k = int(K[om_best])
         x_new = mutate(x, k)
         lo_new = LeadingOnes(tuple(x_new))
         om_new = OneMax(tuple(x_new))
         evaluations += 1
 
-        if lo_new > lo_best: # or (lo_new == lo_best and om_new > om_best):
+        if lo_new > lo_best or (lo_new == lo_best and om_new > om_best):
             x = x_new
             lo_best = lo_new
             om_best = om_new
 
     return evaluations
 
-def OptimalPolicyFitness(i, n):
-    return math.floor(n / (i + 1))
-
-def run_rls_leading_ones(n, num_runs, num_cores, k_policy):
+def run_rls_leading_ones(n, num_runs, num_cores):
     evaluations = np.zeros(num_runs, dtype=int)
+    K = optimal_policy_oneMax(n)  # Precompute K values for given n
     
     with ThreadPoolExecutor(max_workers=num_cores) as executor:
-        futures = [executor.submit(rls_leading_ones, n, k_policy) for _ in range(num_runs)]
+        futures = [executor.submit(rls_leading_ones, n, K) for _ in range(num_runs)]
         for i, future in enumerate(as_completed(futures)):
             evaluations[i] = future.result()
     
@@ -63,49 +68,38 @@ def plot_boxplot(data, labels, title, filename):
     plt.xlabel('Policy')
     plt.ylabel('Evaluations')
     plt.grid(True)
-    if not os.path.exists('Box_plots_noGreedy'):
-        os.makedirs('Box_plots_noGreedy')
-    plt.savefig(os.path.join('Box_plots_noGreedy', filename))
+    if not os.path.exists('Box_plots_om'):
+        os.makedirs('Box_plots_om')
+    plt.savefig(os.path.join('Box_plots_om', filename))
     plt.close()
 
 if __name__ == "__main__":
-    for n in range(2, 3):
+    for n in range(2, 16):
         num_runs = 500  # Number of Monte Carlo runs
         num_cores = 24  # Number of cores for parallelization
     
         # Run RLS with both policies
         random.seed(42)
         np.random.seed(42)
-        evaluations_k_calculator = run_rls_leading_ones(n, num_runs, num_cores, 'K_calculator')
-        
-        random.seed(42)
-        np.random.seed(42)
-        evaluations_optimal_policy = run_rls_leading_ones(n, num_runs, num_cores, 'OptimalPolicyFitness')
+        evaluations_k_calculator = run_rls_leading_ones(n, num_runs, num_cores)
     
         mean_evals_k_calculator = round(np.mean(evaluations_k_calculator), 3)
         std_evals_k_calculator = round(np.std(evaluations_k_calculator), 3)
         
-        mean_evals_optimal_policy = round(np.mean(evaluations_optimal_policy), 3)
-        std_evals_optimal_policy = round(np.std(evaluations_optimal_policy), 3)
-        
         print(f"n = {n}")
         print(f"Mean evaluations (K_calculator): {mean_evals_k_calculator}")
         print(f"Standard deviation of evaluations (K_calculator): {std_evals_k_calculator}")
-        print(f"Mean evaluations (OptimalPolicyFitness): {mean_evals_optimal_policy}")
-        print(f"Standard deviation of evaluations (OptimalPolicyFitness): {std_evals_optimal_policy}")
             
         # Plot and save boxplot for both policies
-        plot_boxplot([evaluations_k_calculator, evaluations_optimal_policy], 
-                     ['K_calculator', 'OptimalPolicyFitness'], 
-                     f"Boxplot of Evaluations for LeadingOnes Problem (n={n}, runs={num_runs})",
-                     f'{n}_boxplot.png')
+        # plot_boxplot([evaluations_k_calculator, evaluations_optimal_policy], 
+        #              ['K_calculator', 'OptimalPolicyFitness'], 
+        #              f"Boxplot of Evaluations for LeadingOnes Problem (n={n}, runs={num_runs})",
+        #              f'{n}_boxplot.png')
         
         with open('results_simulation.txt', 'a') as file:
             file.write(f"n: {n}\n")
             file.write(f"Mean (K_calculator): {mean_evals_k_calculator}\n")
             file.write(f"Std Dev (K_calculator): {std_evals_k_calculator}\n")
-            file.write(f"Mean (OptimalPolicyFitness): {mean_evals_optimal_policy}\n")
-            file.write(f"Std Dev (OptimalPolicyFitness): {std_evals_optimal_policy}\n")
     
         # # Plot expected times
         # plt.figure(figsize=(12, 8))
