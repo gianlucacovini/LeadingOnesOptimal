@@ -9,11 +9,6 @@ from functools import lru_cache
 import time
 from itertools import combinations
 
-"""
-Da correggere per fare i fixed portfolio: il massimo che mette all'inizio non può metterlo se non è
-nel portfolio. Poi la storia del portfolio non funziona ancora...
-"""
-
 core_num = 24
 curr_dir = os.getcwd()
 
@@ -44,43 +39,10 @@ def categorize_bit_strings(n):
     
     return results_dict
 
-def k_loop(args):
-    k, l, m, n, couples, num_couples, T = args
-
-    P = np.zeros((n+1, n+1))
-    current_nodes = np.array(couples[(l, m)])
-    
-    # In this case we consider the couples (lambda_, mu) and not (l + lambda_, m + mu) as before
-    for lambda_ in range(l, n):
-        
-        for mu in  range(0, n):
-            if (lambda_, mu) in couples:
-                nodes = np.array(couples[(lambda_, mu)])
-                distances = np.sum(np.abs(nodes[:, None, :] - current_nodes[None, :, :]), axis=2)
-                valid_indices = np.where(distances == k)
-                
-                if len(valid_indices[0]) > 0:
-                    for i, j in zip(*valid_indices):
-                        node = nodes[i]
-                        if LeadingOnes(tuple(node)) >= l:
-                            P[lambda_, mu] += 1 / (math.comb(n, k) * num_couples)
-            
-    P[l, m] = 1 - np.sum(P)
-    
-    # A questo punto abbiamo P con tutte le probabilità a partire da (l, m). Io devo salvarmi tutte quelle da ogni (l, mu) di partenza con mu da l a n-1
-    
-    
-    if P[l, m] != 1:
-        E_current = round((1 + np.sum(P * T)) / (1 - P[l, m]), 3)
-    else:
-        E_current = 1
-    
-    return E_current
-
 def terms_calculator(args):
-    k, l, m, n, couples, num_couples, T = args
+    k, l, n, couples, num_couples, T = args
     
-    A = np.zeros((n-m, n-l))
+    A = np.zeros((n-1-l, n-1-l))
     
     # Building the A matrix for the system
     for starting_m in range(l, n): # taking values from l to n-1
@@ -88,7 +50,7 @@ def terms_calculator(args):
             current_nodes = np.array(couples[(l, starting_m)])
         
             for arriving_m in range(l, n): # taking values from l to n-1
-                if (l, arriving_m) in couples:
+                if (l, arriving_m) in couples and starting_m != arriving_m:
                     nodes = np.array(couples[(l, arriving_m)])
                     distances = np.sum(np.abs(nodes[:, None, :] - current_nodes[None, :, :]), axis=2)
                     valid_indices = np.where(distances == k)
@@ -127,19 +89,19 @@ def terms_calculator(args):
                     
     return A, b
         
+def E_calculator(args):
+    k, l, n, couples, num_couples, T = args
     
-
-def E_calculator(l, E_tail):
-    # Idealmente risolve il sistema Ax = b
-    # Come prima cosa costruisco le matrici
+    # La cosa che devo fare adesso è rimettere a posto un po' le variabili. 
+    # Comunque l'idea c'è, base farla ad un certo punto funzionare
     
-    # costruisco la P con P_calculator
+    A, b = terms_calculator(args)
     
-    # con P costrusico A e b molto facilmente: per b dovrò usare anche le informazioni in E_tail
+    x = np.linalg.solve(A, b)
     
-    # risolvo il sistema
+    T[l] = x
     
-    pass
+    return T
 
 
 
@@ -150,9 +112,7 @@ def variables_calculator(n, pool):
 
     couples = categorize_bit_strings(n)
 
-    c = len(couples) - 2
-
-    current_couple = list(couples.keys())[c]
+    num_couples = len(couples) # è giusto??
 
     K[(n-1, n-1)] = 1
     T[(n-1, n-1)] = n
@@ -161,7 +121,10 @@ def variables_calculator(n, pool):
     in_prob[(n-1, n-1)] = 1 / 2**n
 
     for l in reversed(range(1, n-1)):
-        E[l] = E_calculator(l, E[l+1:]) # Dovrebbe restituire un vettore con i tempi attesi per ogni mu per ogni l
+        for k in range(0, n-l+1): # Poi da parallelizzare, vedere meglio
+            args = k, l, n, couples, num_couples, T
+            
+            T = E_calculator(args) # Dovrebbe restituire un vettore con i tempi attesi per ogni mu per ogni l
 
     K[(0, 0)] = n
     T[(0, 0)] = 1
@@ -290,5 +253,5 @@ def variables_calculator_fulltime(n, K):
 
 if __name__ == "__main__":
     with multiprocessing.Pool(processes=core_num) as pool:
-        for n in range(1, 14):
+        for n in range(3, 4):
             process_iteration(n, pool)
