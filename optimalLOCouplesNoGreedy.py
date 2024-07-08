@@ -40,7 +40,7 @@ def categorize_bit_strings(n):
     return results_dict
 
 def terms_calculator(args):
-    l, n, couples, T, k = args
+    l, n, couples, T, in_prob, k = args
     
     A = np.zeros((n-l, n-l))
     
@@ -52,7 +52,7 @@ def terms_calculator(args):
             current_nodes = np.array(couples[(l, starting_m)])
             num_couples = len(current_nodes)
             
-            in_prob = num_couples / 2**n
+            in_prob[(l, starting_m)] = num_couples / 2**n
         
             for arriving_m in range(l, n): # taking values from l to n-1
                 if (l, arriving_m) in couples:
@@ -93,12 +93,12 @@ def terms_calculator(args):
     return A, b
         
 def E_calculator(args):
-    l, n, couples, T = args
+    l, n, couples, T, in_prob = args
     
     A_dict = {}
     b_dict = {}
     for k in range(1, n-l+1):
-        args_terms = l, n, couples, T, k
+        args_terms = l, n, couples, T, in_prob, k
         A, b = terms_calculator(args_terms)
         A_dict[k] = A
         b_dict[k] = b
@@ -159,7 +159,7 @@ def variables_calculator(n, pool):
     in_prob[(n-1, n-1)] = 1 / 2**n
 
     for l in reversed(range(0, n-1)):
-        args = l, n, couples, T
+        args = l, n, couples, T, in_prob
         
         x_opt, k_opt = E_calculator(args) # it gives a vector with expected times for 
             
@@ -240,5 +240,5 @@ def process_iteration(n, pool):
 
 if __name__ == "__main__":
     with multiprocessing.Pool(processes=core_num) as pool:
-        for n in range(3, 11):
+        for n in range(2, 11):
             process_iteration(n, pool)
