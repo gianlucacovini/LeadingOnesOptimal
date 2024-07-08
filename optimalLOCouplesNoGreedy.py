@@ -42,7 +42,7 @@ def categorize_bit_strings(n):
 def terms_calculator(args):
     k, l, n, couples, num_couples, T = args
     
-    A = np.zeros((n-1-l, n-1-l))
+    A = np.zeros((n-l, n-l))
     
     # Building the A matrix for the system
     for starting_m in range(l, n): # taking values from l to n-1
@@ -50,7 +50,7 @@ def terms_calculator(args):
             current_nodes = np.array(couples[(l, starting_m)])
         
             for arriving_m in range(l, n): # taking values from l to n-1
-                if (l, arriving_m) in couples and starting_m != arriving_m:
+                if (l, arriving_m) in couples:
                     nodes = np.array(couples[(l, arriving_m)])
                     distances = np.sum(np.abs(nodes[:, None, :] - current_nodes[None, :, :]), axis=2)
                     valid_indices = np.where(distances == k)
@@ -60,12 +60,13 @@ def terms_calculator(args):
                             node = nodes[i]
                             if LeadingOnes(tuple(node)) >= l:
                                 # ocio ai meno
-                                A[starting_m, arriving_m] -= 1 / (math.comb(n, k) * num_couples) # non sono sicuro di questa formula ma mi fido del me stesso del passato
+                                A[starting_m - l, arriving_m - l] -= 1 / (math.comb(n, k) * num_couples) # non sono sicuro di questa formula ma mi fido del me stesso del passato
             
-        A[starting_m, starting_m] = np.sum(A[starting_m, :]) # bisogna aggiustare i segni??
+        A[starting_m - l, starting_m - l] = 1 + np.sum(A[starting_m - l, :]) # bisogna aggiustare i segni??
+                                                            # Poi attenzione alla vecchia storia del fatto che può stare nella coppia ma esserci transizione di stato e quindi probabilità non nulla
     
     # Calculating all other probabilties for l+lambda_ so that I can compute the known term b
-    b = np.ones(n-l-1) # è giusto o è n-1-m?
+    b = np.ones(n-l) # è giusto o è n-1-m?
     
     for starting_mu in range(l, n):
         P = np.zeros((n+1, n+1))
@@ -85,7 +86,7 @@ def terms_calculator(args):
                                 P[lambda_, mu] += 1 / (math.comb(n, k) * num_couples)
                                 # proviamo ad aggiornare direttamente b, va'
                     
-                    b[starting_mu] += P[lambda_, mu] * T[lambda_, mu]
+                    b[starting_mu - l] += P[lambda_, mu] * T[lambda_, mu]
                     
     return A, b
         
@@ -121,7 +122,7 @@ def variables_calculator(n, pool):
     in_prob[(n-1, n-1)] = 1 / 2**n
 
     for l in reversed(range(1, n-1)):
-        for k in range(0, n-l+1): # Poi da parallelizzare, vedere meglio
+        for k in range(1, n-l+1): # Poi da parallelizzare, vedere meglio
             args = k, l, n, couples, num_couples, T
             
             T = E_calculator(args) # Dovrebbe restituire un vettore con i tempi attesi per ogni mu per ogni l
