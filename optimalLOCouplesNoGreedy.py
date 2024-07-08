@@ -103,20 +103,6 @@ def E_calculator(args):
         A_dict[k] = A
         b_dict[k] = b
         
-        
-    # Ora che ho tutte le righe per A e b mi faccio un po' di cicli mappazzone e trovo 
-    # tutte le x e tengo la migliore
-    
-    # funzione combinatoria che mi calcoli tutti le combinazioni di k per l fissato
-    
-        # funzione che mi costruisce le A e b corrispondenti a una combinazione di k
-        
-        # calcolo della x
-        
-        # classico: se è minore dell'ottimo, salva se no passa.
-        # OSS: visto che l'ottimo va calcolato come media meglio tenersi a mente anche num_couples in modo da non doverlo calcolare ogni volta
-        # ma alla fine va bene anche così
-        
     # Generate all possible combinations of n-l sequences of values of k
     combinations = list(itertools.product(range(1, n-l+1), repeat=n-l))
     
@@ -240,5 +226,5 @@ def process_iteration(n, pool):
 
 if __name__ == "__main__":
     with multiprocessing.Pool(processes=core_num) as pool:
-        for n in range(2, 11):
+        for n in range(3, 4):
             process_iteration(n, pool)
