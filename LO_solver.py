@@ -10,6 +10,18 @@ from heuristic_policy import K_calculator, LeadingOnes, OneMax
 
 curr_dir = os.getcwd()
 
+def custom_K(l, m):
+    K = np.array([
+    [6, 6, 3, 3, 1, 6],
+    [0, 5, 4, 2, 2, 1],
+    [0, 0, 3, 2, 2, 1],
+    [0, 0, 0, 2, 1, 1],
+    [0, 0, 0, 0, 1, 1],
+    [0, 0, 0, 0, 0, 1]
+    ])
+    
+    return K[l, m]
+
 def mutate(x, k):
     """Flip k random bits in x"""
     n = len(x)
@@ -31,12 +43,14 @@ def rls_leading_ones(n, k_policy):
             k = K[lo_best, om_best]
         elif k_policy == 'OptimalPolicyFitness':
             k = OptimalPolicyFitness(lo_best, n)
+        elif k_policy == 'custom':
+            k = custom_K(lo_best, om_best)
         x_new = mutate(x, k)
         lo_new = LeadingOnes(tuple(x_new))
         om_new = OneMax(tuple(x_new))
         evaluations += 1
 
-        if lo_new > lo_best: # or (lo_new == lo_best and om_new > om_best):
+        if lo_new >= lo_best: # or (lo_new == lo_best and om_new > om_best):
             x = x_new
             lo_best = lo_new
             om_best = om_new
@@ -69,7 +83,16 @@ def plot_boxplot(data, labels, title, filename):
     plt.close()
 
 if __name__ == "__main__":
-    for n in range(2, 3):
+    random.seed(42)
+    np.random.seed(42)
+    evaluations_custom = run_rls_leading_ones(6, 500, 1, 'custom')
+    
+    mean_evals_custom = round(np.mean(evaluations_custom), 3)
+    
+    print(mean_evals_custom)
+    
+    
+    for n in range(2, 2):
         num_runs = 500  # Number of Monte Carlo runs
         num_cores = 24  # Number of cores for parallelization
     

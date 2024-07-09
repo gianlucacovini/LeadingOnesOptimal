@@ -2,12 +2,10 @@ import numpy as np
 import itertools
 import math
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import os
 import multiprocessing
 from functools import lru_cache
 import time
-from itertools import combinations
 
 core_num = 24
 curr_dir = os.getcwd()
@@ -55,7 +53,7 @@ def terms_calculator(args):
             in_prob[(l, starting_m)] = num_couples / 2**n
         
             for arriving_m in range(l, n): # taking values from l to n-1
-                if (l, arriving_m) in couples:
+                if (l, arriving_m) in couples: # Forse lo si può velocizzare mettendo direttamente qui la condizione sulla distanza
                     nodes = np.array(couples[(l, arriving_m)])
                     distances = np.sum(np.abs(nodes[:, None, :] - current_nodes[None, :, :]), axis=2)
                     valid_indices = np.where(distances == k)
@@ -67,7 +65,7 @@ def terms_calculator(args):
                                 # ocio ai meno
                                 A[starting_m - l, arriving_m - l] -= 1 / (math.comb(n, k) * num_couples) # non sono sicuro di questa formula ma mi fido del me stesso del passato
             
-            A[starting_m - l, starting_m - l] = -np.sum(A[starting_m - l, :]) - 2*A[starting_m - l, starting_m - l]
+            A[starting_m - l, starting_m - l] = -np.sum(A[starting_m - l, :]) + A[starting_m - l, starting_m - l]
                                                             # Poi attenzione alla vecchia storia del fatto che può stare nella coppia ma esserci transizione di stato e quindi probabilità non nulla: è il motivo di questo -2*
                                                             
             P = np.zeros((n+1, n+1))
@@ -101,8 +99,8 @@ def E_calculator(args):
         args_terms = l, n, couples, T, in_prob, k
         A, b = terms_calculator(args_terms)
         A_dict[k] = A
-        b_dict[k] = b
-        
+        b_dict[k] = b # siamo sicuri che costruire così le matrici e poi comporle abbia senso?
+    
     # Generate all possible combinations of n-l sequences of values of k
     combinations = list(itertools.product(range(1, n-l+1), repeat=n-l))
     
@@ -136,8 +134,6 @@ def variables_calculator(n, pool):
 
     couples = categorize_bit_strings(n)
 
-    num_couples = len(couples) # è giusto??
-
     K[(n-1, n-1)] = 1
     T[(n-1, n-1)] = n
 
@@ -147,21 +143,16 @@ def variables_calculator(n, pool):
     for l in reversed(range(0, n-1)):
         args = l, n, couples, T, in_prob
         
-        x_opt, k_opt = E_calculator(args) # it gives a vector with expected times for 
+        x_opt, k_opt = E_calculator(args)
             
-        # ok, ora aggiorniamo K e T e il gioco è quasi fatto
         K[l, l:n] = k_opt
         T[l, l:n] = x_opt
-            
-    K[(0, 0)] = n
-    T[(0, 0)] = 1
-    in_prob[(0, 0)] = 1 / 2**n
 
-    Expected_time = 1 + (in_prob * T).sum()
+    Expected_time = (in_prob * T).sum() # TBD: Ci va il +1 o no??
 
     return K, T, Expected_time
 
-def plot_2d_matrix(matrix_data, n, sav_dir=None):
+def plot_2d_matrix(matrix_data, n, data, save=False):
     fig, ax = plt.figure(figsize=(8, 6)), plt.gca()
 
     lower_tri_mask = np.tril(np.ones_like(matrix_data, dtype=bool), k=-1)
@@ -183,7 +174,10 @@ def plot_2d_matrix(matrix_data, n, sav_dir=None):
 
     ax.set_xlabel('OneMax fitness')
     ax.set_ylabel('LeadingOnes fitness')
-    ax.set_title(f'Values of k - n = {n}')
+    if data == "K":
+        ax.set_title(f'Values of K; n = {n}')
+    if data == "T":
+        ax.set_title(f'Values of T; n = {n}')
 
     ax.set_xticks(np.arange(matrix_data_masked.shape[1]))
     ax.set_yticks(np.arange(matrix_data_masked.shape[0]))
@@ -195,12 +189,15 @@ def plot_2d_matrix(matrix_data, n, sav_dir=None):
         for j in range(matrix_data_masked.shape[1]):
             value = matrix_data_masked[i, j]
             if not np.isnan(value):
-                ax.text(j, i, f'{value:.0f}', ha='center', va='center', color='black')
+                if data == "K":
+                    ax.text(j, i, f'{value:.0f}', ha='center', va='center', color='black')
+                if data == "T":
+                    ax.text(j, i, f'{value:.2f}', ha='center', va='center', color='black')
 
-    if sav_dir == "K":
-        plt.savefig(os.path.join(curr_dir, 'K_plots', f'{n}.png'), format='png')
-    elif sav_dir == "T":
-        plt.savefig(os.path.join(curr_dir, 'T_plots', f'{n}.png'), format='png')
+    if save and data == "K":
+        plt.savefig(os.path.join(curr_dir, 'plots', 'K_plots', 'No_greedy', f'{n}.png'), format='png')
+    elif save and data == "T":
+        plt.savefig(os.path.join(curr_dir, 'plots', 'T_plots', 'No_greedy', f'{n}.png'), format='png')
 
 def process_iteration(n, pool):
     start_time = time.time()
@@ -219,12 +216,12 @@ def process_iteration(n, pool):
         file.write(f"K: {K}\n")
         file.write(f"T: {T}\n")
 
-    plot_2d_matrix(K, n)
-    plot_2d_matrix(T, n)
+    plot_2d_matrix(K, n, "K", True)
+    plot_2d_matrix(T, n, "T", True)
     
     return Expected_time
 
 if __name__ == "__main__":
     with multiprocessing.Pool(processes=core_num) as pool:
-        for n in range(3, 4):
+        for n in range(1, 11):
             process_iteration(n, pool)
