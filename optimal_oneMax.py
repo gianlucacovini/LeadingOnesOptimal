@@ -156,9 +156,9 @@ def plot_2d_array(array_data, sav_dir=None):
                 ax.text(j, i, f'{value:.0f}', ha='center', va='center', color='black')
     
     if sav_dir == "K":
-        plt.savefig(os.path.join(curr_dir, 'K_plots', 'OneMax', f'{n}_fitness.png'), format='png')
+        plt.savefig(os.path.join(curr_dir, 'plots', 'K_plots', 'OneMax', f'{n}_fitness.png'), format='png')
     if sav_dir == "T":
-        plt.savefig(os.path.join(curr_dir, 'T_plots', 'OneMax', f'{n}_fitness.png'), format='png')
+        plt.savefig(os.path.join(curr_dir, 'plots', 'T_plots', 'OneMax', f'{n}_fitness.png'), format='png')
 
     plt.show()
 
@@ -184,5 +184,5 @@ def process_iteration(n, pool):
 
 if __name__ == "__main__":
     with multiprocessing.Pool(processes=core_num) as pool:
-        for n in range(1, 8):
+        for n in range(1, 14):
             process_iteration(n, pool)
