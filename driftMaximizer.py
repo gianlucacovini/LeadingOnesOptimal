@@ -53,8 +53,8 @@ def Expected_increment_calculator(n, l, m, k): # forse il max_i che ci interessa
         elif l == n-2:
             if m > l:
                 P_string[(1,)] = 1
-            elif m == l:
-                P_string[(1,)] = 0
+        elif m == l:
+            P_string[(1,)] = 0
         elif l < n-2:
             P_string[(1,)] = math.comb(n-(l+1), m-l)/math.comb(n-(l+2), m-l)
             
@@ -78,18 +78,15 @@ def Expected_increment_calculator(n, l, m, k): # forse il max_i che ci interessa
     Prob[i-1] = P[(0,)] + P[(1,)] # Probability of increment exactly 1. The -1 is because the increment starts from 1 and the indeces from 0
     
     for i in range(2, max_i + 1):
-        if l+i+1 > n:                
-            if P_string[(1,)] == 1:
-                if k == 1:
-                    Prob[i-1] = 1/n
-                else:
-                    Prob[i-1] = 0
-                    
-            if P_string[(0,)] == 1:
-                if k == 2:
-                    Prob[i-1] = 1/math.comb(n, 2)
-                else:
-                    Prob[i-1] = 0
+        if l+i+1 > n:
+            for string in strings[i-1]:
+                Prob_s = P_string[tuple(string)]
+                
+                alt_string = string.copy()  # Use copy to avoid modifying the original list
+                alt_string[-1] = (alt_string[-1] + 1) % 2
+                Prob_f = P_flip[tuple(alt_string)] 
+                
+                Prob[i-1] += Prob_s * Prob_f
             
         elif l+i+1 <= n:
             strings[i] = generate_bit_strings(i) # Idealmente a questo punto filtro le stringhe possibili con l e m dati. Però forse mi serve tenerle per dopo... O forse no
@@ -143,7 +140,7 @@ if __name__ == "__main__":
     n = 3
     l = 0
     m = 0
-    k = 1
+    k = 3
     
     if k < 1 or m < l or l >= n:
         print("Wrong input")
