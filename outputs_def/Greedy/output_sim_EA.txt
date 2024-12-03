@@ -1,0 +1,60 @@
+n = 2
+Mean evaluations (static): 3.788
+Standard deviation of evaluations (static): 5.431
+Mean evaluations (dynamic): 3.244
+Standard deviation of evaluations (dynamic): 3.822
+n = 3
+Mean evaluations (static): 7.544
+Standard deviation of evaluations (static): 8.232
+Mean evaluations (dynamic): 8.75
+Standard deviation of evaluations (dynamic): 8.209
+n = 4
+Mean evaluations (static): 12.158
+Standard deviation of evaluations (static): 11.622
+Mean evaluations (dynamic): 15.848
+Standard deviation of evaluations (dynamic): 15.383
+n = 5
+Mean evaluations (static): 20.184
+Standard deviation of evaluations (static): 17.103
+Mean evaluations (dynamic): 29.922
+Standard deviation of evaluations (dynamic): 31.264
+n = 6
+Mean evaluations (static): 27.698
+Standard deviation of evaluations (static): 22.196
+Mean evaluations (dynamic): 57.232
+Standard deviation of evaluations (dynamic): 62.161
+n = 7
+Mean evaluations (static): 37.26
+Standard deviation of evaluations (static): 26.97
+Mean evaluations (dynamic): 87.57
+Standard deviation of evaluations (dynamic): 95.229
+n = 8
+Mean evaluations (static): 48.93
+Standard deviation of evaluations (static): 33.235
+Mean evaluations (dynamic): 168.502
+Standard deviation of evaluations (dynamic): 207.321
+n = 9
+Mean evaluations (static): 63.048
+Standard deviation of evaluations (static): 38.384
+Mean evaluations (dynamic): 338.304
+Standard deviation of evaluations (dynamic): 483.023
+n = 10
+Mean evaluations (static): 79.56
+Standard deviation of evaluations (static): 48.025
+Mean evaluations (dynamic): 656.176
+Standard deviation of evaluations (dynamic): 931.373
+n = 11
+Mean evaluations (static): 95.45
+Standard deviation of evaluations (static): 53.287
+Mean evaluations (dynamic): 1203.606
+Standard deviation of evaluations (dynamic): 1918.064
+n = 12
+Mean evaluations (static): 110.348
+Standard deviation of evaluations (static): 61.625
+Mean evaluations (dynamic): 2340.786
+Standard deviation of evaluations (dynamic): 3489.913
+n = 13
+Mean evaluations (static): 129.912
+Standard deviation of evaluations (static): 67.505
+Mean evaluations (dynamic): 4328.212
+Standard deviation of evaluations (dynamic): 7026.341

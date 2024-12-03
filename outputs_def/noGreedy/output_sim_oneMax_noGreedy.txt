@@ -1,0 +1,52 @@
+Expected time for n = 1:  1.5
+Execution Time for n = 1: 0.0 seconds
+0.49
+0.5
+Expected time for n = 2:  1.75
+Execution Time for n = 2: 0.0 seconds
+1.1
+1.022
+Expected time for n = 3:  2.625
+Execution Time for n = 3: 2.797 seconds
+2.433
+2.536
+Expected time for n = 4:  4.938
+Execution Time for n = 4: 3.2 seconds
+4.968
+4.54
+Expected time for n = 5:  7.08
+Execution Time for n = 5: 3.231 seconds
+8.01
+7.107
+Expected time for n = 6:  9.438
+Execution Time for n = 6: 3.187 seconds
+13.033
+12.625
+Expected time for n = 7:  12.057
+Execution Time for n = 7: 3.969 seconds
+21.652
+25.815
+Expected time for n = 8:  15.026
+Execution Time for n = 8: 3.688 seconds
+30.343
+35.539
+Expected time for n = 9:  17.962
+Execution Time for n = 9: 4.729 seconds
+36.034
+35.865
+Expected time for n = 10:  20.942
+Execution Time for n = 10: 6.96 seconds
+52.805
+64.882
+Expected time for n = 11:  24.125
+Execution Time for n = 11: 12.851 seconds
+89.298
+146.506
+Expected time for n = 12:  27.246
+Execution Time for n = 12: 45.569 seconds
+83.136
+128.332
+Expected time for n = 13:  30.483
+Execution Time for n = 13: 110.789 seconds
+90.401
+120.932

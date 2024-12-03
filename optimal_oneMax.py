@@ -123,7 +123,7 @@ def variables_calculator(n, pool):
 
     return K, T, Expected_time
 
-def plot_2d_array(array_data, sav_dir=None):
+def plot_2d_array(array_data, n, sav_dir=None):
     matrix_data = np.transpose(np.asmatrix(array_data[:-1]))
     
     fig, ax = plt.figure(), plt.gca()
@@ -179,10 +179,12 @@ def process_iteration(n, pool):
         file.write(f"K: {K}\n")
         file.write(f"T: {T}\n")
 
-    plot_2d_array(K, "K")
-    plot_2d_array(T, "T")
+    plot_2d_array(K, n, "K")
+    plot_2d_array(T, n, "T")
+    
+    return K
 
 if __name__ == "__main__":
     with multiprocessing.Pool(processes=core_num) as pool:
-        for n in range(1, 14):
+        for n in range(2, 3):
             process_iteration(n, pool)

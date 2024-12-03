@@ -202,5 +202,5 @@ def process_iteration(n, pool):
 
 if __name__ == "__main__":
     with multiprocessing.Pool(processes=core_num) as pool:
-        for n in range(2, 6):
+        for n in range(2, 21):
             process_iteration(n, pool)

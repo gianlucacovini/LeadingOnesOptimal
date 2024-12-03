@@ -7,6 +7,7 @@ import math
 import os
 
 from heuristic_policy import K_calculator, LeadingOnes, OneMax
+from optimal_oneMax import process_iteration
 
 curr_dir = os.getcwd()
 
@@ -23,8 +24,15 @@ curr_dir = os.getcwd()
 #     return K[l, m]
 
 def custom_K(m):
-    K = np.array([13, 12, 11, 10, 9, 8, 7, 5, 3, 1, 1, 1, 1])
+    K = np.ones(m)
     return K[m]
+
+def K_oneMax(n):
+    core_num = 24
+    with multiprocessing.Pool(processes=core_num) as pool:
+         K_oneMax = process_iteration(n, pool).astype(int)
+            
+    return K_oneMax
 
 def mutate(x, k):
     """Flip k random bits in x"""
@@ -34,28 +42,32 @@ def mutate(x, k):
     x_new[indices] = 1 - x_new[indices]
     return x_new
 
-def rls_leading_ones(n, k_policy):
+def rls_leading_ones(n, k_policy, K = None):
     """ (1+1) RLS for LeadingOnes problem using dynamic k policy """
     x = np.random.randint(2, size=n)  # Start with a random bitstring
     lo_best = LeadingOnes(tuple(x))
     om_best = OneMax(tuple(x))
     evaluations = 0
-    K = K_calculator(n)  # Precompute K values for given n
+    if k_policy == 'K_calculator':
+        K = K_calculator(n)  # Precompute K values for given n
     
     while lo_best < n:
         if k_policy == 'K_calculator':
             k = K[lo_best, om_best]
         elif k_policy == 'OptimalPolicyFitness':
             k = OptimalPolicyFitness(lo_best, n)
+        elif k_policy == 'oneMax':
+            k = K[om_best]
         elif k_policy == 'custom':
             # k = custom_K(lo_best, om_best)
-            k = custom_K(om_best)
+            # k = custom_K(om_best)
+            k = 1
         x_new = mutate(x, k)
         lo_new = LeadingOnes(tuple(x_new))
         om_new = OneMax(tuple(x_new))
         evaluations += 1
 
-        if lo_new > lo_best or (lo_new == lo_best and om_new > om_best):
+        if lo_new >= lo_best: # or (lo_new == lo_best and om_new > om_best):
             x = x_new
             lo_best = lo_new
             om_best = om_new
@@ -65,11 +77,11 @@ def rls_leading_ones(n, k_policy):
 def OptimalPolicyFitness(i, n):
     return math.floor(n / (i + 1))
 
-def run_rls_leading_ones(n, num_runs, num_cores, k_policy):
+def run_rls_leading_ones(n, num_runs, num_cores, k_policy, K=None):
     evaluations = np.zeros(num_runs, dtype=int)
     
     with ThreadPoolExecutor(max_workers=num_cores) as executor:
-        futures = [executor.submit(rls_leading_ones, n, k_policy) for _ in range(num_runs)]
+        futures = [executor.submit(rls_leading_ones, n, k_policy, K) for _ in range(num_runs)]
         for i, future in enumerate(as_completed(futures)):
             evaluations[i] = future.result()
     
@@ -88,13 +100,53 @@ def plot_boxplot(data, labels, title, filename):
     plt.close()
 
 if __name__ == "__main__":
-    random.seed(42)
-    np.random.seed(42)
-    evaluations_custom = run_rls_leading_ones(13, 1000, 1, 'custom')
+    k_policy = 'optimalPolicyFitness'
+    for n in range(1, 13):
+        
+        if k_policy == 'optimalPolicyFitness':
+            
+            random.seed(42)
+            np.random.seed(42)
+            evaluations_optimal = run_rls_leading_ones(n, 1000, 24, 'optimalPolicyFitness')
+            
+            mean_evals_optimal = round(np.mean(evaluations_optimal), 3)
+            
+            print("theory: ", mean_evals_optimal/n**2)
+            
+            print("mean: ", mean_evals_optimal)
+            
+            std_evals_optimal = round(np.std(evaluations_optimal), 3)
+            print("std: ", std_evals_optimal)
     
-    mean_evals_custom = round(np.mean(evaluations_custom), 3)
+        if k_policy == 'oneMax':
+            K = K_oneMax(n)
+            
+            random.seed(42)
+            np.random.seed(42)
+            evaluations_oneMax = run_rls_leading_ones(n, 1000, 24, 'oneMax', K)
+            
+            mean_evals_oneMax = round(np.mean(evaluations_oneMax), 3)
+            print(mean_evals_oneMax)
+            
+            std_evals_oneMax = round(np.std(evaluations_oneMax), 3)
+            print(std_evals_oneMax)
     
-    print(mean_evals_custom)
+        elif k_policy == 'custom':
+            random.seed(42)
+            np.random.seed(42)
+            evaluations_custom = run_rls_leading_ones(n, 500, 24, 'custom')
+            
+            print("n = ", n)
+            
+            
+            mean_evals_custom = round(np.mean(evaluations_custom), 3)
+            
+            print("theory: ", mean_evals_custom/n**2) # Questo è importante come studio empirico!!
+            
+            print("mean: ", mean_evals_custom)
+            
+            std_evals_custom = round(np.std(evaluations_custom), 3)
+            print("std: ", std_evals_custom)
     
     
     for n in range(2, 2):
@@ -128,12 +180,12 @@ if __name__ == "__main__":
                      f"Boxplot of Evaluations for LeadingOnes Problem (n={n}, runs={num_runs})",
                      f'{n}_boxplot.png')
         
-        with open('results_simulation.txt', 'a') as file:
-            file.write(f"n: {n}\n")
-            file.write(f"Mean (K_calculator): {mean_evals_k_calculator}\n")
-            file.write(f"Std Dev (K_calculator): {std_evals_k_calculator}\n")
-            file.write(f"Mean (OptimalPolicyFitness): {mean_evals_optimal_policy}\n")
-            file.write(f"Std Dev (OptimalPolicyFitness): {std_evals_optimal_policy}\n")
+        # with open('results_simulation.txt', 'a') as file:
+        #     file.write(f"n: {n}\n")
+        #     file.write(f"Mean (K_calculator): {mean_evals_k_calculator}\n")
+        #     file.write(f"Std Dev (K_calculator): {std_evals_k_calculator}\n")
+        #     file.write(f"Mean (OptimalPolicyFitness): {mean_evals_optimal_policy}\n")
+        #     file.write(f"Std Dev (OptimalPolicyFitness): {std_evals_optimal_policy}\n")
     
         # # Plot expected times
         # plt.figure(figsize=(12, 8))

@@ -10,8 +10,8 @@ import time
 from itertools import combinations
 
 """
-Da correggere per fare i fixed portfolio: il massimo che mette all'inizio non può metterlo se non è
-nel portfolio. Poi la storia del portfolio non funziona ancora...
+DEBUG per il portfolio diverso: intanto ora per qualche motivo devo togliere 1 (da capire ma secondario: vedi il calcolo dell'expected runtime)
+- C'è un qualche errore nel calcolo del tempo atteso complessivo 
 """
 
 core_num = 1
@@ -88,7 +88,7 @@ def k_loop(args):
         #P = pool.map(mu_loop, args_list)
     
     P[l, m] = 1 - np.sum(P)
-    
+        
     if P[l, m] != 1:
         E_current = round((1 + np.sum(P * T)) / (1 - P[l, m]), 3)
     else:
@@ -120,29 +120,41 @@ def variables_calculator(n, pool):
         l = current_couple[0]
         m = current_couple[1]
 
-        if current_couple == (0, 0):
-            break
+        # if current_couple == (0, 0):
+        #     break
 
         num_couples = len(couples[(l, m)])
         in_prob[current_couple] = num_couples / 2**n
         
         #with multiprocessing.Pool(processes=core_num) as pool:
-        args_list = [(k, l, m, n, couples, num_couples, T) for k in range(1, n - l + 1)] # CONTROLLARE QUESTO RANGE. NON è min(n, n-l+2)
-
+        k = 3
+        # portfolio = range(1, n - l + 1) # CONTROLLARE QUESTO RANGE. NON è min(n, n-l+2)
+        # portfolio = list(filter(lambda x: x <= n-l, [2**i for i in range(n.bit_length())])) # Ho un po' barato: al momento tolgo tutti i valori di k > n-l però non stamo a fa' Kubrik
+        # portfolio = list(filter(lambda x: x <= n-l, [(i * (n // k) + 1) for i in range(k)]))
+        portfolio = list(filter(lambda x: x <= n-l, range(1, k+1)))
+        
+        args_list = [(k, l, m, n, couples, num_couples, T) for k in portfolio] 
+        
+        
         E_couple = pool.map(k_loop, args_list)
-
+        
         E_opt = np.min(E_couple)
-        k_opt = np.argmin(E_couple) + 1 # +1 because radius start from 1 but indeces start from 0
-
+        index_opt = np.argmin(E_couple)
+        k_opt = portfolio[index_opt]
+        
         K[current_couple] = k_opt
         T[current_couple] = E_opt
-
-    K[(0, 0)] = n
-    T[(0, 0)] = 1
-    in_prob[(0, 0)] = 1 / 2**n
-
-    Expected_time = 1 + (in_prob * T).sum()
-
+        
+        if current_couple == (0, 0):
+            break
+        
+    # # Qui c'è un problema legato al fatto che non è detto che n sia nel portfolio
+    # K[(0, 0)] = n
+    # T[(0, 0)] = 1
+    # in_prob[(0, 0)] = 1 / 2**n
+        
+    Expected_time = (in_prob * T).sum() # PROBLEMA: come mai non c'è il +1?
+    
     return K, T, Expected_time
 
 def plot_2d_matrix(matrix_data, n, sav_dir=None):
@@ -167,7 +179,10 @@ def plot_2d_matrix(matrix_data, n, sav_dir=None):
 
     ax.set_xlabel('OneMax fitness')
     ax.set_ylabel('LeadingOnes fitness')
-    ax.set_title(f'Values of k - n = {n}')
+    if sav_dir == "T":
+        ax.set_title(f'Values of T - n = {n}')
+    else:
+        ax.set_title(f'Values of k - n = {n}')
 
     ax.set_xticks(np.arange(matrix_data_masked.shape[1]))
     ax.set_yticks(np.arange(matrix_data_masked.shape[0]))
@@ -181,10 +196,10 @@ def plot_2d_matrix(matrix_data, n, sav_dir=None):
             if not np.isnan(value):
                 ax.text(j, i, f'{value:.0f}', ha='center', va='center', color='black')
 
-    if sav_dir == "K":
-        plt.savefig(os.path.join(curr_dir, 'K_plots', f'{n}.png'), format='png')
-    elif sav_dir == "T":
-        plt.savefig(os.path.join(curr_dir, 'T_plots', f'{n}.png'), format='png')
+    # if sav_dir == "K":
+    #     plt.savefig(os.path.join(curr_dir, 'K_plots', f'{n}.png'), format='png')
+    # elif sav_dir == "T":
+    #     plt.savefig(os.path.join(curr_dir, 'T_plots', f'{n}.png'), format='png')
 
 def process_iteration(n, pool):
     start_time = time.time()
@@ -264,5 +279,5 @@ def variables_calculator_fulltime(n, K):
 
 if __name__ == "__main__":
     with multiprocessing.Pool(processes=core_num) as pool:
-        for n in range(1, 14):
+        for n in range(5, 6):
             process_iteration(n, pool)

@@ -194,10 +194,10 @@ def plot_2d_matrix(matrix_data, n, data, save=False):
                 if data == "T":
                     ax.text(j, i, f'{value:.2f}', ha='center', va='center', color='black')
 
-    if save and data == "K":
-        plt.savefig(os.path.join(curr_dir, 'plots', 'K_plots', 'No_greedy', f'{n}.png'), format='png')
-    elif save and data == "T":
-        plt.savefig(os.path.join(curr_dir, 'plots', 'T_plots', 'No_greedy', f'{n}.png'), format='png')
+    # if save and data == "K":
+    #     plt.savefig(os.path.join(curr_dir, 'plots', 'K_plots', 'No_greedy', f'{n}.png'), format='png')
+    # elif save and data == "T":
+    #     plt.savefig(os.path.join(curr_dir, 'plots', 'T_plots', 'No_greedy', f'{n}.png'), format='png')
 
 def process_iteration(n, pool):
     start_time = time.time()
@@ -223,5 +223,5 @@ def process_iteration(n, pool):
 
 if __name__ == "__main__":
     with multiprocessing.Pool(processes=core_num) as pool:
-        for n in range(1, 11):
+        for n in range(1, 4):
             process_iteration(n, pool)

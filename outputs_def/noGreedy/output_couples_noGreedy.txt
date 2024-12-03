@@ -1,0 +1,14 @@
+Expected time for n = 1:  0.5
+Execution Time for n = 1: 0.0 seconds
+Expected time for n = 2:  1.125
+Execution Time for n = 2: 0.001 seconds
+Expected time for n = 3:  2.375
+Execution Time for n = 3: 0.011 seconds
+Expected time for n = 4:  4.448
+Execution Time for n = 4: 0.047 seconds
+Expected time for n = 5:  7.463
+Execution Time for n = 5: 0.455 seconds
+Expected time for n = 6:  11.488
+Execution Time for n = 6: 5.128 seconds
+Expected time for n = 7:  16.435
+Execution Time for n = 7: 68.435 seconds

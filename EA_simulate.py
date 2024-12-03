@@ -27,7 +27,6 @@ def EA_leading_ones(n, p_policy):
     lo_best = LeadingOnes(tuple(x))
     om_best = OneMax(tuple(x))
     evaluations = 0
-    # K = K_calculator(n)  # Precompute K values for given n
     
     while lo_best < n:
         if p_policy == 'static':
@@ -39,7 +38,7 @@ def EA_leading_ones(n, p_policy):
         om_new = OneMax(tuple(x_new))
         evaluations += 1
 
-        if lo_new > lo_best: # or (lo_new == lo_best and om_new > om_best):
+        if lo_new > lo_best or (lo_new == lo_best and om_new > om_best):
             x = x_new
             lo_best = lo_new
             om_best = om_new
@@ -69,7 +68,7 @@ def plot_boxplot(data, labels, title, filename):
     plt.close()
 
 if __name__ == "__main__":
-    for n in range(2, 7):
+    for n in range(2, 21):
         num_runs = 500  # Number of Monte Carlo runs
         num_cores = 24  # Number of cores for parallelization
     

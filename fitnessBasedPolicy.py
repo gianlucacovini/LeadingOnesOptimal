@@ -240,7 +240,7 @@ def plot_2d_array(array_data, sav_dir=None):
 
 if __name__ == "__main__":
     
-    for n in range(2, 6):
+    for n in range(2, 21):
     # TBP
         start_time = time.time()
 
