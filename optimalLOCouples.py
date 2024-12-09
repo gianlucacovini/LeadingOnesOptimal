@@ -14,7 +14,7 @@ DEBUG per il portfolio diverso: intanto ora per qualche motivo devo togliere 1 (
 - C'è un qualche errore nel calcolo del tempo atteso complessivo 
 """
 
-core_num = 1
+core_num = 32
 curr_dir = os.getcwd()
 
 def generate_bit_strings(n):
@@ -127,11 +127,11 @@ def variables_calculator(n, pool):
         in_prob[current_couple] = num_couples / 2**n
         
         #with multiprocessing.Pool(processes=core_num) as pool:
-        k = 3
-        # portfolio = range(1, n - l + 1) # CONTROLLARE QUESTO RANGE. NON è min(n, n-l+2)
+        c = 3
+        portfolio = range(1, n - l + 1) # CONTROLLARE QUESTO RANGE. NON è min(n, n-l+2)
         # portfolio = list(filter(lambda x: x <= n-l, [2**i for i in range(n.bit_length())])) # Ho un po' barato: al momento tolgo tutti i valori di k > n-l però non stamo a fa' Kubrik
-        # portfolio = list(filter(lambda x: x <= n-l, [(i * (n // k) + 1) for i in range(k)]))
-        portfolio = list(filter(lambda x: x <= n-l, range(1, k+1)))
+        # portfolio = list(filter(lambda x: x <= n-l, [(i * (n // c) + 1) for i in range(c)]))
+        # portfolio = list(filter(lambda x: x <= n-l, range(1, c+1)))
         
         args_list = [(k, l, m, n, couples, num_couples, T) for k in portfolio] 
         

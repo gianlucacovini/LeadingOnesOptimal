@@ -7,7 +7,7 @@ import multiprocessing
 from functools import lru_cache
 import time
 
-core_num = 24
+core_num = 32
 curr_dir = os.getcwd()
 
 def generate_bit_strings(n):
@@ -95,14 +95,20 @@ def E_calculator(args):
     
     A_dict = {}
     b_dict = {}
-    for k in range(1, n-l+1):
+    
+    c = 3
+    portfolio = range(1, n-l+1)
+    # portfolio = list(filter(lambda x: x <= n-l, [2**i for i in range(n.bit_length())])) # Ho un po' barato: al momento tolgo tutti i valori di k > n-l però non stamo a fa' Kubrik
+    # portfolio = list(filter(lambda x: x <= n-l, [(i * (n // c) + 1) for i in range(c)]))
+    # portfolio = list(filter(lambda x: x <= n-l, range(1, c+1)))
+    for k in portfolio:
         args_terms = l, n, couples, T, in_prob, k
         A, b = terms_calculator(args_terms)
         A_dict[k] = A
         b_dict[k] = b # siamo sicuri che costruire così le matrici e poi comporle abbia senso?
     
     # Generate all possible combinations of n-l sequences of values of k
-    combinations = list(itertools.product(range(1, n-l+1), repeat=n-l))
+    combinations = list(itertools.product(portfolio, repeat=n-l))
     
     x_opt_mean = np.inf
     for comb in combinations:
@@ -223,5 +229,5 @@ def process_iteration(n, pool):
 
 if __name__ == "__main__":
     with multiprocessing.Pool(processes=core_num) as pool:
-        for n in range(1, 4):
+        for n in range(3, 4):
             process_iteration(n, pool)
